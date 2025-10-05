@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Tareas con Firebase</title>
+    <title>Lista de Tareas con Firebase + Debug</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -44,6 +44,14 @@
         }
         button:hover {
             background: #0056b3;
+        }
+        .debug-btn {
+            background: #ff9800;
+            margin: 5px;
+            border-radius: 5px;
+        }
+        .debug-btn:hover {
+            background: #e68900;
         }
         #listaTareas {
             list-style: none;
@@ -95,12 +103,28 @@
             color: #666;
             font-style: italic;
         }
+        .debug-panel {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #ff9800;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📝 Mi Lista de Tareas con Firebase</h1>
         
+        <!-- Panel de Debug -->
+        <div class="debug-panel">
+            <h3>🔧 Panel de Debug</h3>
+            <button class="debug-btn" onclick="probarConexion()">Probar Conexión Firebase</button>
+            <button class="debug-btn" onclick="verReglas()">Ver Reglas Firestore</button>
+            <button class="debug-btn" onclick="limpiarCache()">Limpiar Cache</button>
+            <div id="debug-output" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+        </div>
+
         <div class="status desconectado" id="status">
             ⚠️ Conectando a Firebase...
         </div>
@@ -114,12 +138,20 @@
         <ul id="listaTareas"></ul>
     </div>
 
-    <!-- Firebase SDK v9 Compat (funciona en navegadores antiguos) -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     
+    <!-- Eruda para debug en móvil -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>
-        // 🔥 TU CONFIGURACIÓN DE FIREBASE - YA CON TUS DATOS REALES
+        // Inicializar Eruda
+        eruda.init();
+        console.log('🔧 Eruda inicializado - Abre la consola para debug');
+    </script>
+
+    <script>
+        // 🔥 TU CONFIGURACIÓN DE FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDFIW3Q_ynAXPgbAyLd9xdgqSwAAFrtmQg",
             authDomain: "milista-1d318.firebaseapp.com",
@@ -129,39 +161,95 @@
             appId: "1:299824791339:web:49ddb003c6e8e6a6740f6e"
         };
 
+        // Debug inicial
+        console.log('🚀 Iniciando Firebase con config:', firebaseConfig);
+
         // Inicializar Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        let app, db;
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log('✅ Firebase inicializado correctamente');
+        } catch (error) {
+            console.error('❌ Error inicializando Firebase:', error);
+        }
 
         // Referencia a la colección de tareas
         const tareasRef = db.collection('tareas');
 
         // Estado de conexión
-        function actualizarEstado(conectado) {
+        function actualizarEstado(conectado, mensaje = '') {
             const status = document.getElementById('status');
             if (conectado) {
                 status.innerHTML = '🟢 Conectado a Firebase - Cambios en tiempo real';
                 status.className = 'status conectado';
             } else {
-                status.innerHTML = '🔴 Desconectado de Firebase';
+                status.innerHTML = '🔴 Desconectado de Firebase' + (mensaje ? ' - ' + mensaje : '');
                 status.className = 'status desconectado';
             }
         }
 
-        // Escuchar cambios en la conexión
-        db.enableNetwork().then(() => {
-            actualizarEstado(true);
-        });
+        // Funciones de Debug
+        function probarConexion() {
+            const debugOutput = document.getElementById('debug-output');
+            debugOutput.innerHTML = '🔄 Probando conexión...';
+            
+            console.log('🧪 Iniciando prueba de conexión...');
+            
+            // Probar escritura
+            const testData = {
+                texto: "Prueba de conexión " + new Date().toLocaleTimeString(),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            tareasRef.add(testData)
+                .then((docRef) => {
+                    console.log('✅ Escritura EXITOSA - Document ID:', docRef.id);
+                    debugOutput.innerHTML = '✅ Escritura EXITOSA - ID: ' + docRef.id;
+                    
+                    // Probar lectura
+                    return tareasRef.get();
+                })
+                .then((snapshot) => {
+                    console.log('✅ Lectura EXITOSA - Tareas encontradas:', snapshot.size);
+                    debugOutput.innerHTML += '<br>✅ Lectura EXITOSA - ' + snapshot.size + ' tareas';
+                    actualizarEstado(true);
+                    
+                    // Eliminar documento de prueba
+                    tareasRef.doc(snapshot.docs[0].id).delete();
+                })
+                .catch((error) => {
+                    console.error('❌ Error en prueba:', error);
+                    debugOutput.innerHTML = '❌ Error: ' + error.message;
+                    actualizarEstado(false, error.message);
+                });
+        }
 
-        db.disableNetwork().then(() => {
-            actualizarEstado(false);
-        });
+        function verReglas() {
+            const debugOutput = document.getElementById('debug-output');
+            debugOutput.innerHTML = '📋 Reglas actuales deberían permitir lectura/escritura total<br>';
+            debugOutput.innerHTML += 'Ve a Firebase Console → Firestore → Reglas<br>';
+            debugOutput.innerHTML += 'Debe decir: allow read, write: if true;';
+            console.log('📋 Verificando reglas de Firestore...');
+        }
 
-        // Cargar y escuchar tareas en tiempo real
+        function limpiarCache() {
+            const debugOutput = document.getElementById('debug-output');
+            debugOutput.innerHTML = '🗑️ Cache limpiado - Recargando página...';
+            console.log('🔄 Limpiando cache y recargando...');
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 1000);
+        }
+
+        // Escuchar cambios en tiempo real
         function iniciarEscuchaTareas() {
             document.getElementById('loading').style.display = 'none';
+            console.log('👂 Iniciando escucha en tiempo real...');
             
             tareasRef.orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+                console.log('📡 Evento de snapshot - Documentos:', snapshot.size);
+                
                 const lista = document.getElementById('listaTareas');
                 lista.innerHTML = '';
                 
@@ -180,9 +268,11 @@
                     `;
                     lista.appendChild(li);
                 });
+                
+                actualizarEstado(true);
             }, error => {
-                console.error('Error escuchando cambios:', error);
-                actualizarEstado(false);
+                console.error('❌ Error escuchando cambios:', error);
+                actualizarEstado(false, error.message);
             });
         }
 
@@ -192,15 +282,16 @@
             const texto = input.value.trim();
             
             if (texto) {
+                console.log('➕ Agregando tarea:', texto);
                 tareasRef.add({
                     texto: texto,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     creado: new Date().toLocaleString()
                 }).then(() => {
                     input.value = '';
-                    console.log('Tarea agregada correctamente');
+                    console.log('✅ Tarea agregada correctamente');
                 }).catch(error => {
-                    console.error('Error agregando tarea:', error);
+                    console.error('❌ Error agregando tarea:', error);
                     alert('Error al agregar tarea: ' + error.message);
                 });
             } else {
@@ -210,10 +301,11 @@
 
         function eliminarTarea(id) {
             if (confirm('¿Estás seguro de eliminar esta tarea?')) {
+                console.log('🗑️ Eliminando tarea ID:', id);
                 tareasRef.doc(id).delete().then(() => {
-                    console.log('Tarea eliminada correctamente');
+                    console.log('✅ Tarea eliminada correctamente');
                 }).catch(error => {
-                    console.error('Error eliminando tarea:', error);
+                    console.error('❌ Error eliminando tarea:', error);
                     alert('Error al eliminar tarea: ' + error.message);
                 });
             }
@@ -225,16 +317,19 @@
             }
         }
 
-        // Inicializar la aplicación cuando Firebase esté listo
+        // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', function() {
-            // Probar conexión
-            db.collection('tareas').limit(1).get().then(() => {
+            console.log('📱 DOM cargado - Iniciando app...');
+            
+            // Probar conexión inicial
+            tareasRef.limit(1).get().then(() => {
+                console.log('✅ Conexión inicial exitosa');
                 actualizarEstado(true);
                 iniciarEscuchaTareas();
             }).catch(error => {
-                console.error('Error de conexión:', error);
-                actualizarEstado(false);
-                document.getElementById('loading').innerHTML = 'Error conectando a Firebase. Verifica la consola.';
+                console.error('❌ Error conexión inicial:', error);
+                actualizarEstado(false, error.message);
+                document.getElementById('loading').innerHTML = 'Error conectando a Firebase';
             });
         });
     </script>

@@ -148,6 +148,7 @@
             overflow: hidden;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             transition: transform 0.3s;
+            position: relative;
         }
 
         .slider-item:hover {
@@ -158,6 +159,7 @@
             width: 100%;
             height: 200px;
             object-fit: cover;
+            background: #f0f0f0;
         }
 
         .slider-item .info {
@@ -210,8 +212,10 @@
             padding: 30px;
             border-radius: 15px;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .close-modal {
@@ -269,6 +273,61 @@
             text-align: center;
         }
 
+        /* Panel de gestión de imágenes */
+        .image-management {
+            margin-top: 30px;
+            border-top: 2px solid #eee;
+            padding-top: 20px;
+        }
+
+        .image-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+        }
+
+        .image-preview {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .image-info {
+            flex: 1;
+            margin: 0 15px;
+        }
+
+        .image-info h4 {
+            margin: 0;
+            color: #333;
+        }
+
+        .image-info p {
+            margin: 5px 0 0 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .menu-toggle {
@@ -299,6 +358,15 @@
             .section-title {
                 font-size: 2em;
             }
+
+            .image-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .image-preview {
+                margin-bottom: 10px;
+            }
         }
 
         .loading {
@@ -306,6 +374,12 @@
             color: white;
             font-size: 1.2em;
             padding: 40px;
+        }
+
+        .url-help {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -392,10 +466,13 @@
 
             <div id="adminPanel" style="display: none;">
                 <h2>🛠️ Panel de Administración</h2>
+                
+                <!-- Formulario para agregar imágenes -->
                 <form id="addImageForm">
                     <div class="form-group">
                         <label for="imageUrl">URL de la Imagen</label>
                         <input type="url" id="imageUrl" required placeholder="https://ejemplo.com/imagen.jpg">
+                        <div class="url-help">💡 Usa URLs directas a imágenes (que terminen en .jpg, .png, etc.)</div>
                     </div>
                     <div class="form-group">
                         <label for="imageTitle">Título</label>
@@ -410,10 +487,19 @@
                             <option value="separadores">Separadores</option>
                         </select>
                     </div>
-                    <button type="submit" class="submit-btn">Agregar Imagen</button>
+                    <button type="submit" class="submit-btn">➕ Agregar Imagen</button>
                 </form>
+
+                <!-- Gestión de imágenes existentes -->
+                <div class="image-management">
+                    <h3>🗂️ Imágenes Existentes</h3>
+                    <div id="imagesList">
+                        <div class="loading">Cargando imágenes...</div>
+                    </div>
+                </div>
+
                 <div style="margin-top: 20px; text-align: center;">
-                    <button class="admin-btn" onclick="logoutAdmin()" style="background: #666;">Cerrar Sesión</button>
+                    <button class="admin-btn" onclick="logoutAdmin()" style="background: #666;">🚪 Cerrar Sesión</button>
                 </div>
             </div>
         </div>
@@ -439,7 +525,7 @@
         const db = firebase.firestore();
 
         // Variables globales
-        const ADMIN_PASSWORD = "Rosy123"; // Contraseña del admin
+        const ADMIN_PASSWORD = "Rosy123";
         let isAdmin = false;
 
         // Navegación móvil
@@ -479,6 +565,7 @@
         function showAdminPanel() {
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('adminPanel').style.display = 'block';
+            loadImagesManagement(); // Cargar gestión de imágenes
         }
 
         // Login Admin
@@ -511,6 +598,12 @@
             const title = document.getElementById('imageTitle').value;
             const category = document.getElementById('imageCategory').value;
 
+            // Validar URL
+            if (!url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                alert('⚠️ La URL debe ser una imagen (jpg, png, gif, webp)');
+                return;
+            }
+
             try {
                 await db.collection('imagenes').add({
                     url: url,
@@ -521,13 +614,69 @@
 
                 alert('✅ Imagen agregada correctamente');
                 document.getElementById('addImageForm').reset();
-                loadImages(); // Recargar imágenes
+                loadImages(); // Recargar imágenes en la web
+                loadImagesManagement(); // Recargar lista de gestión
             } catch (error) {
                 alert('❌ Error al agregar imagen: ' + error.message);
             }
         });
 
-        // Cargar y mostrar imágenes
+        // Eliminar imagen
+        async function deleteImage(imageId) {
+            if (!isAdmin) {
+                alert('❌ No tienes permisos de administrador');
+                return;
+            }
+
+            if (confirm('¿Estás seguro de eliminar esta imagen?')) {
+                try {
+                    await db.collection('imagenes').doc(imageId).delete();
+                    alert('✅ Imagen eliminada correctamente');
+                    loadImages(); // Recargar imágenes en la web
+                    loadImagesManagement(); // Recargar lista de gestión
+                } catch (error) {
+                    alert('❌ Error al eliminar imagen: ' + error.message);
+                }
+            }
+        }
+
+        // Cargar gestión de imágenes (para admin)
+        async function loadImagesManagement() {
+            try {
+                const snapshot = await db.collection('imagenes')
+                    .orderBy('timestamp', 'desc')
+                    .get();
+
+                const imagesList = document.getElementById('imagesList');
+                
+                if (snapshot.empty) {
+                    imagesList.innerHTML = '<div class="loading">No hay imágenes</div>';
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const image = doc.data();
+                    html += `
+                        <div class="image-item">
+                            <img src="${image.url}" alt="${image.title}" class="image-preview" onerror="this.src='https://via.placeholder.com/60x60?text=Error'">
+                            <div class="image-info">
+                                <h4>${image.title}</h4>
+                                <p><strong>Categoría:</strong> ${image.category} | <strong>Fecha:</strong> ${image.timestamp.toDate().toLocaleDateString()}</p>
+                            </div>
+                            <button class="delete-btn" onclick="deleteImage('${doc.id}')">🗑️ Eliminar</button>
+                        </div>
+                    `;
+                });
+
+                imagesList.innerHTML = html;
+            } catch (error) {
+                console.error('Error cargando gestión de imágenes:', error);
+                document.getElementById('imagesList').innerHTML = '<div class="loading">Error cargando imágenes</div>';
+            }
+        }
+
+        // Cargar y mostrar imágenes en la web principal
         async function loadImages() {
             try {
                 const snapshot = await db.collection('imagenes')
@@ -548,7 +697,9 @@
 
                 snapshot.forEach(doc => {
                     const image = doc.data();
-                    imagesByCategory[image.category].push(image);
+                    if (imagesByCategory[image.category]) {
+                        imagesByCategory[image.category].push(image);
+                    }
                 });
 
                 // Mostrar imágenes en sus sliders
@@ -564,7 +715,8 @@
                         const slide = document.createElement('div');
                         slide.className = 'slider-item';
                         slide.innerHTML = `
-                            <img src="${image.url}" alt="${image.title}" onerror="this.src='https://via.placeholder.com/300x200?text=Error+Imagen'">
+                            <img src="${image.url}" alt="${image.title}" 
+                                 onerror="this.src='https://via.placeholder.com/300x200?text=Error+Imagen'">
                             <div class="info">
                                 <h3>${image.title}</h3>
                             </div>

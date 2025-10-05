@@ -3,155 +3,428 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Tareas con Firebase + Debug</title>
+    <title>Galería de Productos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-        .input-group {
-            display: flex;
-            margin-bottom: 20px;
-        }
-        #tareaInput {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px 0 0 5px;
-            font-size: 16px;
-        }
-        button {
-            padding: 10px 20px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 0 5px 5px 0;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .debug-btn {
-            background: #ff9800;
-            margin: 5px;
-            border-radius: 5px;
-        }
-        .debug-btn:hover {
-            background: #e68900;
-        }
-        #listaTareas {
-            list-style: none;
+        * {
+            margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
-        .tarea-item {
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Header y Navegación */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-            background: #f9f9f9;
-            margin-bottom: 5px;
-            border-radius: 5px;
+            height: 70px;
         }
-        .tarea-item:last-child {
-            border-bottom: none;
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
         }
-        .eliminar {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 3px;
+
+        .logo span {
+            color: #667eea;
+        }
+
+        /* Menú Hamburguesa */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
             cursor: pointer;
         }
-        .eliminar:hover {
-            background: #c82333;
+
+        .menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: #333;
+            margin: 3px 0;
+            transition: 0.3s;
         }
-        .status {
-            text-align: center;
-            margin: 15px 0;
-            font-weight: bold;
-            padding: 10px;
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-menu li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 10px 15px;
             border-radius: 5px;
         }
-        .conectado { 
-            background: #d4edda; 
-            color: #155724; 
-            border: 1px solid #c3e6cb;
+
+        .nav-menu li a:hover,
+        .nav-menu li a.active {
+            background: #667eea;
+            color: white;
         }
-        .desconectado { 
-            background: #f8d7da; 
-            color: #721c24; 
-            border: 1px solid #f5c6cb;
+
+        .admin-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
         }
+
+        /* Main Content */
+        main {
+            margin-top: 70px;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Sliders */
+        .slider-section {
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .slider-container {
+            position: relative;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .slider {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            gap: 20px;
+            padding: 20px 0;
+            scrollbar-width: none;
+        }
+
+        .slider::-webkit-scrollbar {
+            display: none;
+        }
+
+        .slider-item {
+            flex: 0 0 auto;
+            width: 300px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .slider-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .slider-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .slider-item .info {
+            padding: 15px;
+        }
+
+        .slider-item h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .slider-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .slider-nav button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .slider-nav button:hover {
+            background: #5a6fd8;
+        }
+
+        /* Modal Admin */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .login-form {
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: flex;
+            }
+
+            .nav-menu {
+                position: fixed;
+                top: 70px;
+                left: -100%;
+                width: 100%;
+                background: white;
+                flex-direction: column;
+                text-align: center;
+                transition: 0.3s;
+                box-shadow: 0 10px 27px rgba(0,0,0,0.05);
+                padding: 20px 0;
+            }
+
+            .nav-menu.active {
+                left: 0;
+            }
+
+            .slider-item {
+                width: 250px;
+            }
+
+            .section-title {
+                font-size: 2em;
+            }
+        }
+
         .loading {
             text-align: center;
-            color: #666;
-            font-style: italic;
-        }
-        .debug-panel {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
-            border-left: 4px solid #ff9800;
+            color: white;
+            font-size: 1.2em;
+            padding: 40px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📝 Mi Lista de Tareas con Firebase</h1>
-        
-        <!-- Panel de Debug -->
-        <div class="debug-panel">
-            <h3>🔧 Panel de Debug</h3>
-            <button class="debug-btn" onclick="probarConexion()">Probar Conexión Firebase</button>
-            <button class="debug-btn" onclick="verReglas()">Ver Reglas Firestore</button>
-            <button class="debug-btn" onclick="limpiarCache()">Limpiar Cache</button>
-            <div id="debug-output" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <div class="logo">Galeria<span>Productos</span></div>
+            
+            <div class="menu-toggle" id="mobile-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            
+            <ul class="nav-menu">
+                <li><a href="#portada" class="active">Portada</a></li>
+                <li><a href="#cubre-polvo">Cubre Polvo</a></li>
+                <li><a href="#separadores">Separadores</a></li>
+                <li><button class="admin-btn" onclick="openAdminModal()">Admin</button></li>
+            </ul>
         </div>
+    </header>
 
-        <div class="status desconectado" id="status">
-            ⚠️ Conectando a Firebase...
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Portada -->
+            <section id="portada" class="slider-section">
+                <h2 class="section-title">🚗 Portada</h2>
+                <div class="slider-container">
+                    <div class="slider" id="portada-slider">
+                        <div class="loading">Cargando imágenes...</div>
+                    </div>
+                    <div class="slider-nav">
+                        <button onclick="scrollSlider('portada-slider', -300)">❮ Anterior</button>
+                        <button onclick="scrollSlider('portada-slider', 300)">Siguiente ❯</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cubre Polvo -->
+            <section id="cubre-polvo" class="slider-section">
+                <h2 class="section-title">🛡️ Cubre Polvo</h2>
+                <div class="slider-container">
+                    <div class="slider" id="cubre-polvo-slider">
+                        <div class="loading">Cargando imágenes...</div>
+                    </div>
+                    <div class="slider-nav">
+                        <button onclick="scrollSlider('cubre-polvo-slider', -300)">❮ Anterior</button>
+                        <button onclick="scrollSlider('cubre-polvo-slider', 300)">Siguiente ❯</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Separadores -->
+            <section id="separadores" class="slider-section">
+                <h2 class="section-title">📁 Separadores</h2>
+                <div class="slider-container">
+                    <div class="slider" id="separadores-slider">
+                        <div class="loading">Cargando imágenes...</div>
+                    </div>
+                    <div class="slider-nav">
+                        <button onclick="scrollSlider('separadores-slider', -300)">❮ Anterior</button>
+                        <button onclick="scrollSlider('separadores-slider', 300)">Siguiente ❯</button>
+                    </div>
+                </div>
+            </section>
         </div>
+    </main>
 
-        <div class="input-group">
-            <input type="text" id="tareaInput" placeholder="Escribe una nueva tarea..." onkeypress="handleEnter(event)">
-            <button onclick="agregarTarea()">Agregar Tarea</button>
+    <!-- Modal Admin -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeAdminModal()">&times;</span>
+            
+            <div id="loginForm" class="login-form">
+                <h2>🔐 Acceso Admin</h2>
+                <div class="form-group">
+                    <input type="password" id="adminPassword" placeholder="Contraseña de administrador">
+                </div>
+                <button class="submit-btn" onclick="loginAdmin()">Ingresar</button>
+            </div>
+
+            <div id="adminPanel" style="display: none;">
+                <h2>🛠️ Panel de Administración</h2>
+                <form id="addImageForm">
+                    <div class="form-group">
+                        <label for="imageUrl">URL de la Imagen</label>
+                        <input type="url" id="imageUrl" required placeholder="https://ejemplo.com/imagen.jpg">
+                    </div>
+                    <div class="form-group">
+                        <label for="imageTitle">Título</label>
+                        <input type="text" id="imageTitle" required placeholder="Título descriptivo">
+                    </div>
+                    <div class="form-group">
+                        <label for="imageCategory">Categoría</label>
+                        <select id="imageCategory" required>
+                            <option value="">Seleccionar categoría</option>
+                            <option value="portada">Portada</option>
+                            <option value="cubre-polvo">Cubre Polvo</option>
+                            <option value="separadores">Separadores</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="submit-btn">Agregar Imagen</button>
+                </form>
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="admin-btn" onclick="logoutAdmin()" style="background: #666;">Cerrar Sesión</button>
+                </div>
+            </div>
         </div>
-
-        <div id="loading" class="loading">Cargando tareas...</div>
-        <ul id="listaTareas"></ul>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    
-    <!-- Eruda para debug en móvil -->
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>
-        // Inicializar Eruda
-        eruda.init();
-        console.log('🔧 Eruda inicializado - Abre la consola para debug');
-    </script>
 
     <script>
-        // 🔥 TU CONFIGURACIÓN DE FIREBASE
+        // 🔥 Configuración Firebase - USA TU CONFIGURACIÓN
         const firebaseConfig = {
             apiKey: "AIzaSyDFIW3Q_ynAXPgbAyLd9xdgqSwAAFrtmQg",
             authDomain: "milista-1d318.firebaseapp.com",
@@ -161,176 +434,169 @@
             appId: "1:299824791339:web:49ddb003c6e8e6a6740f6e"
         };
 
-        // Debug inicial
-        console.log('🚀 Iniciando Firebase con config:', firebaseConfig);
-
         // Inicializar Firebase
-        let app, db;
-        try {
-            app = firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            console.log('✅ Firebase inicializado correctamente');
-        } catch (error) {
-            console.error('❌ Error inicializando Firebase:', error);
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Variables globales
+        const ADMIN_PASSWORD = "Rosy123"; // Contraseña del admin
+        let isAdmin = false;
+
+        // Navegación móvil
+        document.getElementById('mobile-menu').addEventListener('click', function() {
+            document.querySelector('.nav-menu').classList.toggle('active');
+        });
+
+        // Cerrar menú al hacer click en un link
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.querySelector('.nav-menu').classList.remove('active');
+            });
+        });
+
+        // Funciones del slider
+        function scrollSlider(sliderId, amount) {
+            const slider = document.getElementById(sliderId);
+            slider.scrollBy({ left: amount, behavior: 'smooth' });
         }
 
-        // Referencia a la colección de tareas
-        const tareasRef = db.collection('tareas');
+        // Modal Admin
+        function openAdminModal() {
+            document.getElementById('adminModal').style.display = 'flex';
+            showLoginForm();
+        }
 
-        // Estado de conexión
-        function actualizarEstado(conectado, mensaje = '') {
-            const status = document.getElementById('status');
-            if (conectado) {
-                status.innerHTML = '🟢 Conectado a Firebase - Cambios en tiempo real';
-                status.className = 'status conectado';
+        function closeAdminModal() {
+            document.getElementById('adminModal').style.display = 'none';
+        }
+
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('adminPassword').value = '';
+        }
+
+        function showAdminPanel() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+
+        // Login Admin
+        function loginAdmin() {
+            const password = document.getElementById('adminPassword').value;
+            
+            if (password === ADMIN_PASSWORD) {
+                isAdmin = true;
+                showAdminPanel();
             } else {
-                status.innerHTML = '🔴 Desconectado de Firebase' + (mensaje ? ' - ' + mensaje : '');
-                status.className = 'status desconectado';
+                alert('❌ Contraseña incorrecta');
             }
         }
 
-        // Funciones de Debug
-        function probarConexion() {
-            const debugOutput = document.getElementById('debug-output');
-            debugOutput.innerHTML = '🔄 Probando conexión...';
+        function logoutAdmin() {
+            isAdmin = false;
+            showLoginForm();
+        }
+
+        // Agregar imagen
+        document.getElementById('addImageForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            console.log('🧪 Iniciando prueba de conexión...');
-            
-            // Probar escritura
-            const testData = {
-                texto: "Prueba de conexión " + new Date().toLocaleTimeString(),
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            tareasRef.add(testData)
-                .then((docRef) => {
-                    console.log('✅ Escritura EXITOSA - Document ID:', docRef.id);
-                    debugOutput.innerHTML = '✅ Escritura EXITOSA - ID: ' + docRef.id;
-                    
-                    // Probar lectura
-                    return tareasRef.get();
-                })
-                .then((snapshot) => {
-                    console.log('✅ Lectura EXITOSA - Tareas encontradas:', snapshot.size);
-                    debugOutput.innerHTML += '<br>✅ Lectura EXITOSA - ' + snapshot.size + ' tareas';
-                    actualizarEstado(true);
-                    
-                    // Eliminar documento de prueba
-                    tareasRef.doc(snapshot.docs[0].id).delete();
-                })
-                .catch((error) => {
-                    console.error('❌ Error en prueba:', error);
-                    debugOutput.innerHTML = '❌ Error: ' + error.message;
-                    actualizarEstado(false, error.message);
+            if (!isAdmin) {
+                alert('❌ No tienes permisos de administrador');
+                return;
+            }
+
+            const url = document.getElementById('imageUrl').value;
+            const title = document.getElementById('imageTitle').value;
+            const category = document.getElementById('imageCategory').value;
+
+            try {
+                await db.collection('imagenes').add({
+                    url: url,
+                    title: title,
+                    category: category,
+                    timestamp: new Date()
                 });
-        }
 
-        function verReglas() {
-            const debugOutput = document.getElementById('debug-output');
-            debugOutput.innerHTML = '📋 Reglas actuales deberían permitir lectura/escritura total<br>';
-            debugOutput.innerHTML += 'Ve a Firebase Console → Firestore → Reglas<br>';
-            debugOutput.innerHTML += 'Debe decir: allow read, write: if true;';
-            console.log('📋 Verificando reglas de Firestore...');
-        }
+                alert('✅ Imagen agregada correctamente');
+                document.getElementById('addImageForm').reset();
+                loadImages(); // Recargar imágenes
+            } catch (error) {
+                alert('❌ Error al agregar imagen: ' + error.message);
+            }
+        });
 
-        function limpiarCache() {
-            const debugOutput = document.getElementById('debug-output');
-            debugOutput.innerHTML = '🗑️ Cache limpiado - Recargando página...';
-            console.log('🔄 Limpiando cache y recargando...');
-            setTimeout(() => {
-                window.location.reload(true);
-            }, 1000);
-        }
+        // Cargar y mostrar imágenes
+        async function loadImages() {
+            try {
+                const snapshot = await db.collection('imagenes')
+                    .orderBy('timestamp', 'desc')
+                    .get();
 
-        // Escuchar cambios en tiempo real
-        function iniciarEscuchaTareas() {
-            document.getElementById('loading').style.display = 'none';
-            console.log('👂 Iniciando escucha en tiempo real...');
-            
-            tareasRef.orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-                console.log('📡 Evento de snapshot - Documentos:', snapshot.size);
-                
-                const lista = document.getElementById('listaTareas');
-                lista.innerHTML = '';
-                
-                if (snapshot.empty) {
-                    lista.innerHTML = '<li style="text-align: center; color: #666; padding: 20px;">No hay tareas aún. ¡Agrega la primera!</li>';
-                    return;
-                }
-                
+                // Limpiar sliders
+                document.getElementById('portada-slider').innerHTML = '';
+                document.getElementById('cubre-polvo-slider').innerHTML = '';
+                document.getElementById('separadores-slider').innerHTML = '';
+
+                // Agrupar por categoría
+                const imagesByCategory = {
+                    'portada': [],
+                    'cubre-polvo': [],
+                    'separadores': []
+                };
+
                 snapshot.forEach(doc => {
-                    const tarea = doc.data();
-                    const li = document.createElement('li');
-                    li.className = 'tarea-item';
-                    li.innerHTML = `
-                        <span>${tarea.texto}</span>
-                        <button class="eliminar" onclick="eliminarTarea('${doc.id}')">❌ Eliminar</button>
-                    `;
-                    lista.appendChild(li);
+                    const image = doc.data();
+                    imagesByCategory[image.category].push(image);
                 });
-                
-                actualizarEstado(true);
-            }, error => {
-                console.error('❌ Error escuchando cambios:', error);
-                actualizarEstado(false, error.message);
-            });
-        }
 
-        // Funciones para manejar tareas
-        function agregarTarea() {
-            const input = document.getElementById('tareaInput');
-            const texto = input.value.trim();
-            
-            if (texto) {
-                console.log('➕ Agregando tarea:', texto);
-                tareasRef.add({
-                    texto: texto,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    creado: new Date().toLocaleString()
-                }).then(() => {
-                    input.value = '';
-                    console.log('✅ Tarea agregada correctamente');
-                }).catch(error => {
-                    console.error('❌ Error agregando tarea:', error);
-                    alert('Error al agregar tarea: ' + error.message);
-                });
-            } else {
-                alert('Por favor escribe una tarea');
-            }
-        }
+                // Mostrar imágenes en sus sliders
+                for (const [category, images] of Object.entries(imagesByCategory)) {
+                    const slider = document.getElementById(`${category}-slider`);
+                    
+                    if (images.length === 0) {
+                        slider.innerHTML = '<div class="loading">No hay imágenes en esta categoría</div>';
+                        continue;
+                    }
 
-        function eliminarTarea(id) {
-            if (confirm('¿Estás seguro de eliminar esta tarea?')) {
-                console.log('🗑️ Eliminando tarea ID:', id);
-                tareasRef.doc(id).delete().then(() => {
-                    console.log('✅ Tarea eliminada correctamente');
-                }).catch(error => {
-                    console.error('❌ Error eliminando tarea:', error);
-                    alert('Error al eliminar tarea: ' + error.message);
+                    images.forEach(image => {
+                        const slide = document.createElement('div');
+                        slide.className = 'slider-item';
+                        slide.innerHTML = `
+                            <img src="${image.url}" alt="${image.title}" onerror="this.src='https://via.placeholder.com/300x200?text=Error+Imagen'">
+                            <div class="info">
+                                <h3>${image.title}</h3>
+                            </div>
+                        `;
+                        slider.appendChild(slide);
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error cargando imágenes:', error);
+                document.querySelectorAll('.slider').forEach(slider => {
+                    slider.innerHTML = '<div class="loading">Error cargando imágenes</div>';
                 });
             }
         }
 
-        function handleEnter(event) {
-            if (event.key === 'Enter') {
-                agregarTarea();
-            }
-        }
-
-        // Inicializar la aplicación
+        // Cargar imágenes al iniciar
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📱 DOM cargado - Iniciando app...');
+            loadImages();
             
-            // Probar conexión inicial
-            tareasRef.limit(1).get().then(() => {
-                console.log('✅ Conexión inicial exitosa');
-                actualizarEstado(true);
-                iniciarEscuchaTareas();
-            }).catch(error => {
-                console.error('❌ Error conexión inicial:', error);
-                actualizarEstado(false, error.message);
-                document.getElementById('loading').innerHTML = 'Error conectando a Firebase';
+            // Escuchar cambios en tiempo real
+            db.collection('imagenes').onSnapshot(() => {
+                loadImages();
             });
+        });
+
+        // Cerrar modal al hacer click fuera
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('adminModal');
+            if (event.target === modal) {
+                closeAdminModal();
+            }
         });
     </script>
 </body>

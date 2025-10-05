@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tareas con Firebase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .input-group {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        #tareaInput {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px 0 0 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #listaTareas {
+            list-style: none;
+            padding: 0;
+        }
+        .tarea-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .tarea-item:last-child {
+            border-bottom: none;
+        }
+        .eliminar {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .eliminar:hover {
+            background: #c82333;
+        }
+        .status {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .conectado { color: green; }
+        .desconectado { color: red; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Mi Lista de Tareas</h1>
+        
+        <div class="status" id="status">
+            🔴 Desconectado de Firebase
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="tareaInput" placeholder="Escribe una nueva tarea...">
+            <button onclick="agregarTarea()">Agregar Tarea</button>
+        </div>
+
+        <ul id="listaTareas"></ul>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // 🔥 CONFIGURACIÓN DE FIREBASE - REEMPLAZA CON TUS DATOS
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_PROYECTO.firebaseapp.com",
+            projectId: "TU_PROYECTO-ID",
+            storageBucket: "TU_PROYECTO.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "TU_APP_ID"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Referencia a la colección de tareas
+        const tareasRef = db.collection('tareas');
+
+        // Estado de conexión
+        db.enableNetwork().then(() => {
+            document.getElementById('status').innerHTML = '🟢 Conectado a Firebase';
+            document.getElementById('status').className = 'status conectado';
+        });
+
+        // Cargar tareas existentes
+        cargarTareas();
+
+        // Escuchar cambios en tiempo real
+        tareasRef.orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+            const lista = document.getElementById('listaTareas');
+            lista.innerHTML = '';
+            
+            snapshot.forEach(doc => {
+                const tarea = doc.data();
+                const li = document.createElement('li');
+                li.className = 'tarea-item';
+                li.innerHTML = `
+                    <span>${tarea.texto}</span>
+                    <button class="eliminar" onclick="eliminarTarea('${doc.id}')">Eliminar</button>
+                `;
+                lista.appendChild(li);
+            });
+        });
+
+        function agregarTarea() {
+            const input = document.getElementById('tareaInput');
+            const texto = input.value.trim();
+            
+            if (texto) {
+                tareasRef.add({
+                    texto: texto,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                input.value = '';
+            }
+        }
+
+        function eliminarTarea(id) {
+            tareasRef.doc(id).delete();
+        }
+
+        function cargarTareas() {
+            tareasRef.orderBy('timestamp', 'desc').get().then(snapshot => {
+                const lista = document.getElementById('listaTareas');
+                lista.innerHTML = '';
+                
+                snapshot.forEach(doc => {
+                    const tarea = doc.data();
+                    const li = document.createElement('li');
+                    li.className = 'tarea-item';
+                    li.innerHTML = `
+                        <span>${tarea.texto}</span>
+                        <button class="eliminar" onclick="eliminarTarea('${doc.id}')">Eliminar</button>
+                    `;
+                    lista.appendChild(li);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
